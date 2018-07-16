@@ -130,6 +130,21 @@ def extract_features_sift(image, config):
     return points, desc
 
 
+def extract_features_dsift(image, config):
+    t = time.time()
+
+    if config.get('dsift_gaussian_blur', False): image = cv2.GaussianBlur(image, (5,5), 0)
+    points, desc = csfm.dsift(image.astype(np.float32) / 255, # VlFeat expects pixel values between 0, 1
+                              step = config.get('dsift_step', 16),
+                              bin_size = config.get('dsift_bin_size', 8),
+                              use_flat_window = config.get('dsift_use_flat_window', True))
+
+    if config.get('feature_root', False): desc = np.sqrt(desc)
+
+    logger.debug('Found {0} points in {1}s'.format( len(points), time.time()-t ))
+    return points, desc
+
+
 def extract_features_surf(image, config):
     surf_hessian_threshold = config['surf_hessian_threshold']
     if context.OPENCV3:
@@ -275,6 +290,8 @@ def extract_features(color_image, config, mask=None):
     feature_type = config['feature_type'].upper()
     if feature_type == 'SIFT':
         points, desc = extract_features_sift(image, config)
+    elif feature_type == 'DSIFT':
+        points, desc = extract_features_dsift(image, config)
     elif feature_type == 'SURF':
         points, desc = extract_features_surf(image, config)
     elif feature_type == 'AKAZE':
@@ -285,7 +302,7 @@ def extract_features(color_image, config, mask=None):
         points, desc = extract_features_orb(image, config)
     else:
         raise ValueError('Unknown feature type '
-                         '(must be SURF, SIFT, AKAZE, HAHOG or ORB)')
+                         '(must be SURF, SIFT, DSIFT, AKAZE, HAHOG or ORB)')
 
     xs = points[:, 0].round().astype(int)
     ys = points[:, 1].round().astype(int)
