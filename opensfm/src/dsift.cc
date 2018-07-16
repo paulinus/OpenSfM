@@ -38,10 +38,8 @@ bp::object dsift(PyObject *image,
     std::vector<float> desc(descsize * numkp);
     float const *descriptors = vl_dsift_get_descriptors(dsift);
     bp::list retn;
-    npy_intp points_shape[2] = {npy_intp(numkp), 4};
-    retn.append(bpn_array_from_data(2, points_shape, &points[0]));
-    npy_intp desc_shape[2] = {npy_intp(numkp), npy_intp(descsize)};
-    retn.append(bpn_array_from_data(2, desc_shape, descriptors));
+    retn.append(bpn_array_from_data(&points[0], npy_intp(numkp), 4));
+    retn.append(bpn_array_from_data(descriptors, npy_intp(numkp), npy_intp(descsize)));
 
     vl_dsift_delete(dsift);
     return retn;
