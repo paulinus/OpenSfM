@@ -41,6 +41,8 @@ def _create_reconstruction(
     distributed to all shots. We pick with the repeat option, thus
     if we have three shots the distribution could be
     something like: [1,2,2], [0,1,2]. We avoid things like [3,3,3]
+    If dist_to_pano_shots, then observations are created and randomly
+    distributed to all panoramic shots in the same manner.
     """
     if n_shots_cam is None:
         n_shots_cam = {}
@@ -81,7 +83,17 @@ def _create_reconstruction(
                         obs = pymap.Observation(100, 200, 0.5, 255, 0, 0, int(pt.id))
                         shot = rec.shots[str(ch)]
                         rec.add_observation(shot, pt, obs)
-        # TODO: If required, we have to do the same for pano shots
+
+        if dist_to_pano_shots:
+            n_pano_shots = len(rec.pano_shots)
+            for pt in rec.points.values():
+                choice = set(np.random.choice(n_pano_shots, n_pano_shots))
+                if len(choice) > 1:
+                    for ch in choice:
+                        # create a new observation
+                        obs = pymap.Observation(100, 200, 0.5, 255, 0, 0, int(pt.id))
+                        pano_shot = rec.pano_shots[str(ch)]
+                        rec.add_observation(pano_shot, pt, obs)
     return rec
 
 
